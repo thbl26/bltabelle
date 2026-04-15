@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Bundesliga Tabelle Editor</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #eef2f7;
+  text-align: center;
+}
+
+h1 {
+  background: #d00000;
+  color: white;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.table {
+  width: 420px;
+  margin: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 8px;
+}
+
+.pos {
+  width: 30px;
+  font-weight: bold;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 200px;
+}
+
+.team img {
+  width: 24px;
+  height: 24px;
+}
+
+select {
+  padding: 4px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 8px 15px;
+  border: none;
+  background: #d00000;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚽ Bundesliga Tabelle Editor</h1>
+
+<div class="table" id="table"></div>
+
+<button onclick="resetTable()">Zurücksetzen</button>
+
+<script>
+
+/* ⚽ TEAMS */
+const teams = [
+{name:"Bayern", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/132.png"},
+{name:"Dortmund", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/124.png"},
+{name:"Leipzig", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/11420.png"},
+{name:"Leverkusen", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/131.png"},
+{name:"Stuttgart", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/134.png"},
+{name:"Frankfurt", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/125.png"},
+{name:"Freiburg", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/126.png"},
+{name:"Union", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/598.png"},
+{name:"Wolfsburg", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/138.png"},
+{name:"Mainz", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/2950.png"},
+{name:"Gladbach", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/268.png"},
+{name:"Köln", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/122.png"},
+
+{name:"Heidenheim", logo:"transfer/heidenheim.png"},
+{name:"St. Pauli", logo:"transfer/stpauli.png"},
+{name:"Hamburg", logo:"transfer/hsv.png"},
+{name:"Augsburg", logo:"transfer/augsburg.png"},
+{name:"Hoffenheim", logo:"transfer/hoffenheim.png"},
+
+{name:"Bremen", logo:"https://a.espncdn.com/i/teamlogos/soccer/500/137.png"}
+];
+
+const tableDiv = document.getElementById("table");
+
+/* Tabelle erstellen */
+function createTable() {
+  tableDiv.innerHTML = "";
+
+  let saved = JSON.parse(localStorage.getItem("tabelle")) || [];
+
+  for (let i = 0; i < 18; i++) {
+    let row = document.createElement("div");
+    row.className = "row";
+
+    let pos = document.createElement("div");
+    pos.className = "pos";
+    pos.innerText = i + 1;
+
+    let teamDiv = document.createElement("div");
+    teamDiv.className = "team";
+
+    let img = document.createElement("img");
+    img.src = "";
+
+    let name = document.createElement("span");
+    name.innerText = "-";
+
+    teamDiv.appendChild(img);
+    teamDiv.appendChild(name);
+
+    let select = document.createElement("select");
+
+    let emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.innerText = "-- Team wählen --";
+    select.appendChild(emptyOption);
+
+    teams.forEach(t => {
+      let opt = document.createElement("option");
+      opt.value = t.name;
+      opt.innerText = t.name;
+      select.appendChild(opt);
+    });
+
+    // gespeicherte Auswahl laden
+    if (saved[i]) {
+      select.value = saved[i];
+      updateTeamDisplay(select, img, name);
+    }
+
+    select.onchange = () => {
+      updateTeamDisplay(select, img, name);
+      saveTable();
+      preventDuplicates();
+    };
+
+    row.appendChild(pos);
+    row.appendChild(teamDiv);
+    row.appendChild(select);
+
+    tableDiv.appendChild(row);
+  }
+}
+
+/* Anzeige aktualisieren */
+function updateTeamDisplay(select, img, name) {
+  let team = teams.find(t => t.name === select.value);
+  if (team) {
+    img.src = team.logo;
+    name.innerText = team.name;
+  } else {
+    img.src = "";
+    name.innerText = "-";
+  }
+}
+
+/* Speichern */
+function saveTable() {
+  let selects = document.querySelectorAll("select");
+  let data = [];
+  selects.forEach(s => data.push(s.value));
+  localStorage.setItem("tabelle", JSON.stringify(data));
+}
+
+/* doppelte Teams verhindern */
+function preventDuplicates() {
+  let selects = document.querySelectorAll("select");
+  let values = Array.from(selects).map(s => s.value);
+
+  selects.forEach(s => {
+    Array.from(s.options).forEach(o => {
+      if (o.value !== "" && values.includes(o.value) && s.value !== o.value) {
+        o.disabled = true;
+      } else {
+        o.disabled = false;
+      }
+    });
+  });
+}
+
+/* Reset */
+function resetTable() {
+  localStorage.removeItem("tabelle");
+  createTable();
+}
+
+createTable();
+
+</script>
+
+</body>
+</html>
